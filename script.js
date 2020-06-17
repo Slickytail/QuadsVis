@@ -32,6 +32,7 @@ function createListeners() {
 	}
 	dimDown.onclick = () => {dim--; updateDimText()};
 	dimUp.onclick = () => {dim++; updateDimText()};
+	updateDimText();
 
 	// Dimension display
 	let z2 = document.getElementById("z2");
@@ -155,23 +156,31 @@ function drawAffSpace() {
 
 	let cards = d3.select(qapSvg)
 		.select("#points")
-	    .selectAll(".card")
+	    .selectAll("g.card")
 	    .data(squares, d => d.card);
 
 	let dCards = cards.enter().append("g")
 	    .classed("card", true)
 	    .on('click', function(d) {
-	    	if (qap.excludes(d.card))
-	    		return;
+
+	    	if (qap.excludes(d.card)) {
+	    		//drawQap();
+	    		throw "Excluded cards shouldn't be clickable..."
+	    	}
 	    	if (qap.contains(d.card))
 	    		qap.remove(d.card);
 	    	else
 	    		qap.add(d.card);
-	    	drawQap();
+	    	setTimeout(drawQap, 20);
 	    });
 	dCards.append("rect");
 	dCards.append("text");
-	cards.exit().remove();
+	cards.exit()
+		.each(d => {
+			if (qap.contains(d.card))
+	    		qap.remove(d.card);
+		})
+		.remove();
 
 	cards = cards.merge(dCards)
 		.attr("transform", d => `translate(${d.xi * cellSize}, ${gridYMin + d.yi * cellSize})`);
@@ -182,12 +191,14 @@ function drawAffSpace() {
 		.attr("font-size", cellSize*0.9)
 		.attr("x", cellSize/2)
 		.attr("y", cellSize/2);
+	drawQap();
 
-	function drawQap() {
-		cards
+}
+function drawQap() {
+		d3.selectAll("g.card")
 		    .classed("in-qap", d => qap.contains(d.card))
-		    .classed("excluded", d => qap.excludes(d.card));
-		cards.select("text")
+		    .classed("excluded", d => qap.excludes(d.card))
+		.select("text")
 			.text(function(d) {
 				if (qap.excludes(d.card))
 					return qap.excludes(d.card);
@@ -196,10 +207,6 @@ function drawAffSpace() {
 				return;
 		})
 	}
-	drawQap();
-
-}
-
 if (document.readyState === "complete" ||
    (document.readyState !== "loading" && !document.documentElement.doScroll) ) {
 	createListeners();
