@@ -4,12 +4,33 @@
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
   	<title>Qap Visualizer</title>
   	<link rel="stylesheet" href="styles.css" type="text/css">
-	<script src="./script.js" type="text/javascript"></script>
+	<script src="script.js" type="text/javascript"></script>
 </head>
 <body>
 	<div class="container">
-		<div class="affine"></div>
-		<div class="controls"></div>
+		<div class="affine">
+			<svg id="qap" viewBox="0 0 100 100">
+				<circle cx="50%" cy="50%" r="4" fill="white"/>
+			</svg>
+		</div>
+		<div class="controls">
+			<div class="control-group">
+				<span class="control-label">Dimension</span>
+				<div class="control-box">
+					<span class="clickable icon" id="dim-down">&#129047;</span>
+					<span class="control-display" id="dim">3</span>
+					<span class="clickable icon" id="dim-up">&#129045;</span>
+				</div>
+			</div>
+			<div class="control-group">
+				<span class="control-label">Grid Style</span>
+				<div class="control-box">
+					<img class="clickable toggle icon" id="z2" src="svg/Z2.svg">
+					<img class="clickable toggle icon" id="z4" src="svg/Z2xZ2.svg">
+				</div>
+			</div>
+			<span id="clear" class="control-label clickable">Clear</span>
+		</div>
 	</div>
 </body>
 </html>

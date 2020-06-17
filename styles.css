@@ -4,7 +4,8 @@ body {
 	width: 100vw;
 	height: 100vh;
 	box-sizing: border-box;
-	background-color: #333;
+	background-color: #292929;
+	user-select: none;
 }
 
 .container {
@@ -15,12 +16,86 @@ body {
 }
 .affine {
 	flex-grow: 1;
-	height: 100%;
+	align-self: stretch;
+}
+#qap {
+	max-height: 95%;
+	max-width: 95%;
+	margin: auto;
+	display: block;
 }
 .controls {
 	z-index: 1;
-	background-color: #666;
-	height: 100%;
-	min-width: 20vw;
+	background-color: #484848;
+	align-self: stretch;
+	width: 15vw;
+	min-width: 170px;
 	box-shadow: -2px 0 5px rgba(0, 0, 0, 0.5);
+
+	display: flex;
+	flex-direction: column;
+	padding: 3vh 20px;
+	box-sizing: border-box;
+	font-family: sans-serif;
+}
+.control-group {
+	padding-bottom: 5px;
+	margin-bottom: 15px;
+	border-bottom: 2px solid #595959;
+}
+.control-label {
+	color: #aaa;
+	font-size: 16px;
+}
+.control-box {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: space-around;
+	height: 2em;
+}
+.control-display {
+	color: #ccc;
+	font-size: 26px;
+	font-weight: bold;
+}
+.icon {
+	color: #bbb;
+	font-size: 24px;
+	display: inline-block;
+}
+img.icon {
+	filter: invert(95%);
+	padding: 3px;
+}
+.clickable {
+	cursor: pointer;
+	transition: 0.15s opacity
+}
+.clickable.disabled {
+	cursor: auto;
+	opacity: 50%;
+}
+
+.clickable.toggle {
+	opacity: 50%;
+}
+.clickable.toggle.selected {
+	cursor: auto;
+	opacity: 100%;
+}
+
+@media screen and (max-aspect-ratio: 1/1) {
+	.container {
+		flex-direction: column;
+	}
+	.controls {
+		flex-direction: row;
+		justify-content: space-between;
+		flex-align: stretch;
+		width: 100vw;
+	}
+	.control-group {
+		margin-bottom: 0;
+	}
 }
