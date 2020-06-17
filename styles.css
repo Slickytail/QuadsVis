@@ -24,6 +24,29 @@ body {
 	margin: auto;
 	display: block;
 }
+#qap .card {
+	pointer-events: visible;
+	cursor: pointer;
+}
+#qap .card.excluded {
+	pointer-events: none;
+	cursor: auto;
+}
+#qap text {
+	font-family: sans-serif;
+	dominant-baseline: central;
+	text-anchor: middle;
+}
+#qap .card.in-qap text {
+	fill: #5c9;
+}
+#qap .card.excluded text {
+	fill: #b55;
+	
+}
+#qap .card rect {
+	fill: none;
+}
 .controls {
 	z-index: 1;
 	background-color: #484848;
