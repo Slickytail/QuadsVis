@@ -173,8 +173,11 @@ function drawAffSpace() {
 	    		qap.add(d.card);
 	    	setTimeout(drawQap, 20);
 	    });
-	dCards.append("rect");
-	dCards.append("text");
+    dCards.append("use")
+        .attr("href", "#diamond")
+        .classed("diamond", true);
+    dCards.append("text");
+    dCards.append("rect");
 	cards.exit()
 		.each(d => {
 			if (qap.contains(d.card))
@@ -191,6 +194,9 @@ function drawAffSpace() {
 		.attr("font-size", cellSize*0.9)
 		.attr("x", cellSize/2)
 		.attr("y", cellSize/2);
+    cards.select("use")
+        .attr("width", cellSize)
+        .attr("height", cellSize);
 	drawQap();
 
 }
@@ -200,12 +206,10 @@ function drawQap() {
 		    .classed("excluded", d => qap.excludes(d.card))
 		.select("text")
 			.text(function(d) {
-				if (qap.excludes(d.card))
-					return qap.excludes(d.card);
-				if (qap.contains(d.card))
-					return "⯁";
-				return;
-		})
+                return qap.excludes(d.card) || 0;
+            })
+        d3.select("#cap-size")
+            .text(qap.size());
 	}
 if (document.readyState === "complete" ||
    (document.readyState !== "loading" && !document.documentElement.doScroll) ) {

@@ -12,6 +12,9 @@
 	<div class="container">
 		<div class="affine">
 			<svg id="qap" viewBox="-5 -5 110 110" xmlns="http://www.w3.org/2000/svg">
+                <symbol id="diamond" viewBox="0 0 10 10">
+                    <polygon points="5,1 1,5 5,9 9,5">
+                </symbol>
 				<g id="points"></g>
 				<g id="grid"></g>
 			</svg>
@@ -20,19 +23,22 @@
 			<div class="control-group">
 				<span class="control-label">Dimension</span>
 				<div class="control-box">
-					<span class="clickable icon" id="dim-down">&#129047;</span>
+					<img class="clickable icon" id="dim-down" src="svg/arrow.svg" style="transform: scaleY(-1)">
 					<span class="control-display" id="dim"></span>
-					<span class="clickable icon" id="dim-up">&#129045;</span>
+					<img class="clickable icon" id="dim-up" src="svg/arrow.svg">
 				</div>
 			</div>
 			<div class="control-group">
-				<span class="control-label">Grid Style</span>
+				<span class="control-label">Grid Style (TODO)</span>
 				<div class="control-box">
 					<img class="clickable toggle icon" id="z2" src="svg/Z2.svg">
 					<img class="clickable toggle icon" id="z4" src="svg/Z2xZ2.svg">
 				</div>
 			</div>
-			<span id="clear" class="control-label clickable">Clear</span>
+			<div class="control-box no-label">
+                <span class="control-label">Size: <span id="cap-size">10</span></span>
+                <span id="clear" class="control-label clickable">Clear</span>
+            </control-box>
 		</div>
 	</div>
 </body>

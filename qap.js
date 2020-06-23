@@ -65,6 +65,9 @@ class Qap {
 		this.points = new Set();
 		this.exclude = {};
 	}
+	size () {
+        return this.points.size;
+    }
 	changeDim(newDim) {
 		for (let p of this.points) {
 			if (p > Math.pow(2, newDim))

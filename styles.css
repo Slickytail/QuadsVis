@@ -32,43 +32,52 @@ body {
 	pointer-events: none;
 	cursor: auto;
 }
-#qap text {
-	font-family: sans-serif;
+#qap .card rect {
+    fill: none;
+}
+#qap .card text {
+    fill: #b55;
+    font-family: sans-serif;
 	dominant-baseline: central;
 	text-anchor: middle;
+    pointer-events: none;
 }
-#qap .card.in-qap text {
-	fill: #5c9;
+#qap .card:not(.excluded) text {
+	display: none;
 }
-#qap .card.excluded text {
-	fill: #b55;
-	
+#qap .card .diamond {
+    fill: #5c9;
+    pointer-events: none;
 }
-#qap .card rect {
-	fill: none;
+#qap .card:not(.in-qap) .diamond {
+    display: none;
 }
 .controls {
 	z-index: 1;
 	background-color: #484848;
 	align-self: stretch;
-	width: 15vw;
-	min-width: 170px;
+	width: 17vw;
+	min-width: 200px;
 	box-shadow: -2px 0 5px rgba(0, 0, 0, 0.5);
 
 	display: flex;
 	flex-direction: column;
-	padding: 3vh 20px;
+	padding: calc(3vh - 10px) 20px;
 	box-sizing: border-box;
 	font-family: sans-serif;
 }
 .control-group {
 	padding-bottom: 5px;
-	margin-bottom: 15px;
+	margin-bottom: 5px;
+    margin-top: 5px;
 	border-bottom: 2px solid #595959;
 }
 .control-label {
-	color: #aaa;
+	color: #999;
 	font-size: 16px;
+}
+.control-label.clickable {
+    color: #eee;
 }
 .control-box {
 	display: flex;
@@ -76,6 +85,9 @@ body {
 	align-items: center;
 	justify-content: space-around;
 	height: 2em;
+}
+.control-box.no-label {
+    justify-content: space-between;
 }
 .control-display {
 	color: #ccc;
