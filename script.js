@@ -176,7 +176,8 @@ function drawAffSpace() {
     dCards.append("use")
         .attr("href", "#diamond")
         .classed("diamond", true);
-    dCards.append("text");
+    dCards.append("text")
+        .attr("font-size", "25");
     dCards.append("rect");
 	cards.exit()
 		.each(d => {
@@ -191,9 +192,7 @@ function drawAffSpace() {
 	    .attr("width", cellSize)
 	    .attr("height", cellSize);
 	cards.select("text")
-		.attr("font-size", cellSize*0.9)
-		.attr("x", cellSize/2)
-		.attr("y", cellSize/2);
+        .attr("transform", `translate(${cellSize/2}, ${cellSize/2}) scale(${cellSize * 0.9/25})`);
     cards.select("use")
         .attr("width", cellSize)
         .attr("height", cellSize);
@@ -204,6 +203,7 @@ function drawQap() {
 		d3.selectAll("g.card")
 		    .classed("in-qap", d => qap.contains(d.card))
 		    .classed("excluded", d => qap.excludes(d.card))
+        .filter(".excluded")
 		.select("text")
 			.text(function(d) {
                 return qap.excludes(d.card) || 0;
