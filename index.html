@@ -19,26 +19,46 @@
 				<g id="grid"></g>
 			</svg>
 		</div>
-		<div class="controls">
-			<div class="control-group">
-				<span class="control-label">Dimension</span>
-				<div class="control-box">
-					<img class="clickable icon" id="dim-down" src="svg/arrow.svg" style="transform: scaleY(-1)">
-					<span class="control-display" id="dim"></span>
-					<img class="clickable icon" id="dim-up" src="svg/arrow.svg">
-				</div>
+		<div class="sidebar">
+            <div class="controls">
+                <h1>Controls</h1>
+                <div class="control-group">
+                    <span class="control-label">Dimension</span>
+                    <div class="control-box">
+                        <img class="clickable icon" id="dim-down" src="svg/arrow.svg" style="transform: scaleY(-1)">
+                        <span class="control-display" id="dim"></span>
+                        <img class="clickable icon" id="dim-up" src="svg/arrow.svg">
+                    </div>
+                </div>
+                <div class="control-group">
+                    <span class="control-label">Display Style</span>
+                    <div class="control-box">
+                        <span class="clickable toggle" id="cards">Cards</span>
+                        <span class="clickable toggle" id="counts">Counts</span>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <span class="control-label">Current Qap</span>
+                    <div class="control-box smaller">
+                        <span id="clear" class="control-label clickable">Clear</span>
+                        <span id="complete" class="control-label clickable">Complete</span>
+                        <span id="random" class="control-label clickable">Random</span>
+                    </div>
+                </div>
+                
 			</div>
-			<div class="control-group">
-				<span class="control-label">Grid Style (TODO)</span>
-				<div class="control-box">
-					<img class="clickable toggle icon" id="z2" src="svg/Z2.svg">
-					<img class="clickable toggle icon" id="z4" src="svg/Z2xZ2.svg">
-				</div>
-			</div>
-			<div class="control-box no-label">
-                <span class="control-label">Size: <span id="cap-size">10</span></span>
-                <span id="clear" class="control-label clickable">Clear</span>
-            </control-box>
+			<div class="stats">
+                <h1>Statistics</h1>
+                <div class="control-group">
+                    <div class="control-box no-label">
+                        <span class="control-label">Size: <span id="cap-size" class="control-display">10</span></span>
+                        
+                    </div>
+                </div>
+                <div class="control-group" id="exclude-counts">
+                    <span class="control-label">Exclude Distribution</span>
+                </div>
+            </div>
 		</div>
 	</div>
 </body>

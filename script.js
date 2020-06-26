@@ -1,9 +1,9 @@
 // Looking at caps in Z_2^dim
 var dim = 4;
-// Should the grid be drawn with four components? (vs two)
-var quadStyle = true;
+// Should the cards be drawn with counts instead of cards?
+var displayStyle = false;
 // The points currently in the qap
-var qap = new Qap();
+var qap = new Qap(dim);
 function createListeners() {
 	// Dimension chooser
 	let dimDown = document.getElementById("dim-down");
@@ -35,35 +35,55 @@ function createListeners() {
 	updateDimText();
 
 	// Dimension display
-	let z2 = document.getElementById("z2");
-	let z4 = document.getElementById("z4");
+	let cardsBtn = document.getElementById("cards");
+	let countsBtn = document.getElementById("counts");
 
-	function setQuadStyle(style) {
-		quadStyle = style;
+	function setDisplayStyle(style) {
+		displayStyle = style;
 		if (style) {
-			z2.classList.remove("selected");
-			z4.classList.add("selected");
+			cardsBtn.classList.remove("selected");
+			countsBtn.classList.add("selected");
 		} else {
-			z2.classList.add("selected");
-			z4.classList.remove("selected");
+			cardsBtn.classList.add("selected");
+			countsBtn.classList.remove("selected");
 		}
-		setTimeout(drawAffSpace);
+		window.requestAnimationFrame(drawQap);
 	}
-	z2.onclick = () => setQuadStyle(false);
-	z4.onclick = () => setQuadStyle(true);
-	setQuadStyle(quadStyle);
+	cardsBtn.onclick = () => setDisplayStyle(false);
+	countsBtn.onclick = () => setDisplayStyle(true);
+	setDisplayStyle(displayStyle);
 
 	// Qap clear
-	let clear = document.getElementById("clear");
-	clear.onclick = () => {
+	document.getElementById("clear").onclick = () => {
 		qap.clear();
-		setTimeout(drawAffSpace);
+		window.requestAnimationFrame(drawQap);
+	}
+	// Qap complete
+	document.getElementById("complete").onclick = () => {
+		qap.complete();
+		window.requestAnimationFrame(drawQap);
+	}
+	// Qap random
+	const r = document.getElementById("random");
+	r.onclick = () => {
+        if (r.classList.contains("disabled"))
+            return;
+        r.classList.add("disabled");
+        qap.clear();
+        function _done() {
+            r.classList.remove("disabled");
+            drawQap();
+        }
+        function _f() {
+            qap.random(_f, _done);
+        }
+		qap.random(_f, _done);
 	}
 
-	setTimeout(drawAffSpace);
+	window.requestAnimationFrame(drawAffSpace);
 }
 function drawAffSpace() {
-	let qapSvg = document.getElementById("qap");
+	let qapSvg = d3.select("#qap");
 	// Draw the grid
 	// First, we have to compute the size of the grid.
 
@@ -73,7 +93,7 @@ function drawAffSpace() {
 	const h = 100;
 
 	// We'll put the odd dimension on the X-axis. (this should probably depend on viewport orientation.)
-	// First, we'll figure out the Z2-style layout (ie, quadStyle == false)
+	// First, we'll figure out the cardsBtn-style layout (ie, quadStyle == false)
 	let xDim = Math.ceil(dim/2);
 	let yDim = Math.floor(dim/2);
 	let xL = Math.pow(2, xDim);
@@ -84,7 +104,8 @@ function drawAffSpace() {
 	let gridHeight = cellSize * yL;
 	let gridYMin = (h - gridHeight)/2;
 	let gridYMax = (h + gridHeight)/2;
-
+    
+    qapSvg.attr("viewBox", `-5 ${gridYMin-5} 110 ${gridHeight+10}`);
 	// Draw lines
 	// Generate priority (ruler tickmarks) for lines
 	let ruler = new Array(xL+1).fill(0);
@@ -115,8 +136,8 @@ function drawAffSpace() {
 
 	lines.sort((a, b) => a.priority - b.priority);
 
-	let grid = d3.select(qapSvg)
-		.select("#grid")
+	let grid = qapSvg
+        .select("#grid")
 	    .selectAll(".line")
 	    .data(lines);
 
@@ -136,7 +157,7 @@ function drawAffSpace() {
 	let squares = new Array();
 	for (let xi = 0; xi < xL; xi++) {
 		for (let yi = 0; yi < yL; yi++) {
-			// Compute which SET card this actually is, in Z2 notation
+			// Compute which SET card this actually is, in cardsBtn notation
 			// The strategy here is to interleave the bits of xi and yi.
 			let cardNum = 0;
 			for (let i = 0; i < xDim; i++) {
@@ -154,7 +175,7 @@ function drawAffSpace() {
 		}
 	}
 
-	let cards = d3.select(qapSvg)
+	let cards = qapSvg
 		.select("#points")
 	    .selectAll("g.card")
 	    .data(squares, d => d.card);
@@ -171,7 +192,7 @@ function drawAffSpace() {
 	    		qap.remove(d.card);
 	    	else
 	    		qap.add(d.card);
-	    	setTimeout(drawQap, 20);
+	    	window.requestAnimationFrame(drawQap);
 	    });
     dCards.append("use")
         .attr("href", "#diamond")
@@ -199,18 +220,51 @@ function drawAffSpace() {
 	drawQap();
 
 }
-function drawQap() {
-		d3.selectAll("g.card")
-		    .classed("in-qap", d => qap.contains(d.card))
-		    .classed("excluded", d => qap.excludes(d.card))
-        .filter(".excluded")
-		.select("text")
-			.text(function(d) {
-                return qap.excludes(d.card) || 0;
-            })
-        d3.select("#cap-size")
-            .text(qap.size());
-	}
+function drawQap(fast) {
+    d3.selectAll("g.card")
+        .classed("in-qap", d => qap.contains(d.card))
+        .classed("excluded", d => qap.excludes(d.card))
+      .select("text")
+        .text(function(d) {
+            return qap.excludes(d.card) || 0;
+        });
+    d3.select("#cap-size")
+        .text(qap.size());
+    
+    // Exclude counts
+    const n = Object.values(qap.exclude);
+    if (!n.length) 
+        n.push(0);
+    
+    const m = Math.max(...n);
+    let excludes = new Array(m+1).fill(0);
+    for (let i of n)
+        excludes[i]++;
+    
+    const maxExcludeFactor = (d3.select("#exclude-counts")
+        .node().getBoundingClientRect().width - 5) *
+        0.8 / 10 / Math.max(...excludes);
+    let eC = d3.select("#exclude-counts")
+        .selectAll(".exclude-count")
+        .data(excludes);
+    let deC = eC.enter()
+        .append("div")
+        .classed("exclude-count", true);
+    deC.append('span')
+        .classed('blue-bar', true);
+    deC.append("span")
+        .classed("control-label", true)
+        .text((d, i) => i);
+    deC.append("span")
+        .classed("control-display", true);
+    eC.exit().remove();
+    eC = eC.merge(deC)
+    eC.select("span.control-display")
+        .text((d, i) => i ? `${d}` : `${d} (${d-qap.size()})`);
+    
+    eC.select('.blue-bar')
+        .style('transform', d => `scaleX(${d*maxExcludeFactor})`);
+}
 if (document.readyState === "complete" ||
    (document.readyState !== "loading" && !document.documentElement.doScroll) ) {
 	createListeners();

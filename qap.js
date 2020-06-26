@@ -1,7 +1,8 @@
 class Qap {
-	constructor() {
+	constructor(DIM) {
 		this.points = new Set();
 		this.exclude = {}
+		this.dim = DIM;
 	}
 
 	add(point) {
@@ -27,20 +28,7 @@ class Qap {
 		// Add the point
 		this.points.add(point)
 	}
-	update_excludes() {
-		this.exclude = {}
-		for (let p1 of this.points) {
-			for (let p2 of this.points) {
-				for (let p3 of this.points) {
-					let exc = p1^p2^p3;
-					if (!this.exclude[exc])
-						this.exclude[exc] = 0;
-					if (p1 < p2 < p3)
-						this.exclude[exc]++;
-				}
-			}
-		}
-	}
+	
 	remove(point) {
 		if (!this.points.has(point))
 			return;
@@ -65,6 +53,48 @@ class Qap {
 		this.points = new Set();
 		this.exclude = {};
 	}
+	isComplete() {
+        // This should be cached
+        for (let i = 0; i < Math.pow(2, this.dim); i++) {
+            if (!this.points.has(i) && !this.exclude[i])
+                return false
+        }
+        return true;
+    }
+	complete() {
+        for (let i = 0; i < Math.pow(2, this.dim); i++) {
+            if (!this.points.has(i) && !this.exclude[i])
+                this.add(i);
+        }
+    }
+    random(next, done) {
+        // I am defining "a random qap" in the naive way:
+        //   a qap constructed by randomly following the contruction tree, from the current qap.
+        // This function adds a random point, then calls the callback.
+        // Normally, clear() is called before this.
+        const nP = Math.pow(2, this.dim) - 
+            (
+                this.points.size + 
+                Object.values(this.exclude).filter(x => x).length
+            )
+        if (nP == 0) {
+            setTimeout(done);
+            return;
+        }
+        const indexToAdd = Math.floor(Math.random() * nP);
+        let found = 0;
+        for (let i = 0; i < Math.pow(2, this.dim); i++) {
+            if (!this.points.has(i) && !this.exclude[i]) {
+                if (found == indexToAdd) {
+                    this.add(i);
+                    setTimeout(next);
+                    return;
+                }
+                found++;
+            }
+        }
+        throw "ops"
+    }
 	size () {
         return this.points.size;
     }
@@ -73,5 +103,6 @@ class Qap {
 			if (p > Math.pow(2, newDim))
 				this.remove(p);
 		}
+		this.dim = newDim;
 	}
 }
