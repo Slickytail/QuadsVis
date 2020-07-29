@@ -8,7 +8,7 @@ class Qap {
 	add(point) {
 		if (point >= Math.pow(2, this.dim))
 			throw new RangeError(`Point too large for dimension ${this.dim}`);
-		if (this.exclude[point])
+		if (this.excludesCount(point))
 			throw new RangeError("Point excluded");
 		// If we already have the point, just silently return
 		// If we try to create excludes with a point we already have, we'll mess up our cap
@@ -20,8 +20,14 @@ class Qap {
 				if (p1 < p2) {
 					let exc = point^p1^p2;
 					if (!this.exclude[exc])
-						this.exclude[exc] = 0;
-					this.exclude[exc]++;
+						this.exclude[exc] = [];
+                    // None of these points can be in this.exclude[exc] yet.
+                    // Multiple excludes requires disjoint triples.
+                    // We put the smallest point first for simpler locating
+                    if (point < p1)
+                        this.exclude[exc].push(point, p1, p2) 
+                    else
+                        this.exclude[exc].push(p1, point, p2) 
 				}
 			}
 		}
@@ -36,19 +42,27 @@ class Qap {
 		// Trim the excludes.
 		for (let p1 of this.points) {
 			for (let p2 of this.points) {
-				if (p1 < p2)
-					this.exclude[point^p1^p2]--;
-			}
+				if (p1 < p2) {
+                    let exc = point^p1^p2;
+					let del_index = this.exclude[exc].indexOf(Math.min(point, p1));
+                    if (del_index == -1)
+                        throw "Trying to remove point that wasn't included"
+                    this.exclude[exc].splice(del_index, 3);
+			    }
+            }
 		}
 	}
 	contains(point) {
 		return this.points.has(point);
 	}
-	excludes(point) {
-		if (!this.exclude[point])
-			this.exclude[point] = 0;
-		return this.exclude[point];
+	excludesCount(point) {
+        if (!this.exclude[point])
+            return 0;
+		return this.exclude[point].length / 3;
 	}
+    excludesTriples(point) {
+        return this.exclude[point];
+    }
 	clear() {
 		this.points = new Set();
 		this.exclude = {};
@@ -56,14 +70,14 @@ class Qap {
 	isComplete() {
         // This should be cached
         for (let i = 0; i < Math.pow(2, this.dim); i++) {
-            if (!this.points.has(i) && !this.exclude[i])
+            if (!this.points.has(i) && !this.excludesCount(i))
                 return false
         }
         return true;
     }
 	complete() {
         for (let i = 0; i < Math.pow(2, this.dim); i++) {
-            if (!this.points.has(i) && !this.exclude[i])
+            if (!this.points.has(i) && !this.excludesCount(i))
                 this.add(i);
         }
     }
@@ -75,7 +89,7 @@ class Qap {
         const nP = Math.pow(2, this.dim) - 
             (
                 this.points.size + 
-                Object.values(this.exclude).filter(x => x).length
+                Object.values(this.exclude).filter(x => x.length).length
             )
         if (nP == 0) {
             setTimeout(done);
@@ -84,7 +98,7 @@ class Qap {
         const indexToAdd = Math.floor(Math.random() * nP);
         let found = 0;
         for (let i = 0; i < Math.pow(2, this.dim); i++) {
-            if (!this.points.has(i) && !this.exclude[i]) {
+            if (!this.points.has(i) && !this.excludesCount(i)) {
                 if (found == indexToAdd) {
                     this.add(i);
                     setTimeout(next);

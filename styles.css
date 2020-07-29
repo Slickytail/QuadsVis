@@ -28,7 +28,6 @@ body {
 	cursor: pointer;
 }
 #qap .card.excluded {
-	pointer-events: none;
 	cursor: auto;
 }
 #qap .card rect {
@@ -49,6 +48,18 @@ body {
     pointer-events: none;
 }
 #qap .card:not(.in-qap) .diamond {
+    display: none;
+}
+#lines {
+    fill: none;
+    stroke: #a94632;
+    pointer-events: none;
+    stroke-linecap: square;
+}
+.hidden {
+    display: none;
+}
+.hidden_locked {
     display: none;
 }
 .sidebar {

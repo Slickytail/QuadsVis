@@ -1,7 +1,5 @@
 // Looking at caps in Z_2^dim
 var dim = 4;
-// Should the cards be drawn with counts instead of cards?
-var displayStyle = false;
 // The points currently in the qap
 var qap = new Qap(dim);
 function createListeners() {
@@ -35,23 +33,22 @@ function createListeners() {
 	updateDimText();
 
 	// Dimension display
-	let cardsBtn = document.getElementById("cards");
-	let countsBtn = document.getElementById("counts");
+	let yesBtn = document.getElementById("exc-line-yes");
+	let noBtn = document.getElementById("exc-line-no");
 
 	function setDisplayStyle(style) {
-		displayStyle = style;
 		if (style) {
-			cardsBtn.classList.remove("selected");
-			countsBtn.classList.add("selected");
+			yesBtn.classList.remove("selected");
+			noBtn.classList.add("selected");
 		} else {
-			cardsBtn.classList.add("selected");
-			countsBtn.classList.remove("selected");
-		}
-		window.requestAnimationFrame(drawQap);
-	}
-	cardsBtn.onclick = () => setDisplayStyle(false);
-	countsBtn.onclick = () => setDisplayStyle(true);
-	setDisplayStyle(displayStyle);
+			yesBtn.classList.add("selected");
+			noBtn.classList.remove("selected");
+	    }
+        d3.select("#lines").classed("hidden_locked", style);
+    }
+	yesBtn.onclick = () => setDisplayStyle(false);
+	noBtn.onclick = () => setDisplayStyle(true);
+    setDisplayStyle(false);
 
 	// Qap clear
 	document.getElementById("clear").onclick = () => {
@@ -82,11 +79,11 @@ function createListeners() {
 
 	window.requestAnimationFrame(drawAffSpace);
 }
+var cardPos = [];
 function drawAffSpace() {
 	let qapSvg = d3.select("#qap");
 	// Draw the grid
 	// First, we have to compute the size of the grid.
-
 	// The viewbox is set to 100 x 100. (maybe plus padding)
 	// In the future, we should actually change the viewBox here, depending on the quadStyle and the parity of dim
 	const w = 100;
@@ -152,6 +149,8 @@ function drawAffSpace() {
 	    .attr("y2", d => !d.vert ? gridYMin + d.y * cellSize : gridYMax)
 	    .attr("stroke-width", d => (d.priority+1)*Math.sqrt(cellSize)/15)
 	    .attr("stroke", d => colorScale(d.priority / xDim));
+    d3.select("#lines")
+        .attr("stroke-width", Math.sqrt(cellSize)/3)
 
 	// Draw squares for getting clicks
 	let squares = new Array();
@@ -172,6 +171,7 @@ function drawAffSpace() {
 				yi: yi,
 				card: cardNum
 			})
+            cardPos[cardNum] = {x: (xi+0.5)*cellSize, y: gridYMin + (yi+0.5)*cellSize};
 		}
 	}
 
@@ -180,20 +180,58 @@ function drawAffSpace() {
 	    .selectAll("g.card")
 	    .data(squares, d => d.card);
 
+    let dist = (x1, y1, x2, y2) => Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
 	let dCards = cards.enter().append("g")
 	    .classed("card", true)
 	    .on('click', function(d) {
-
-	    	if (qap.excludes(d.card)) {
-	    		//drawQap();
-	    		throw "Excluded cards shouldn't be clickable..."
+	    	if (qap.excludesCount(d.card)) {
+                return;
 	    	}
 	    	if (qap.contains(d.card))
 	    		qap.remove(d.card);
 	    	else
 	    		qap.add(d.card);
 	    	window.requestAnimationFrame(drawQap);
-	    });
+	    })
+        .on('mouseover', function(d) {
+            // Compute which lines we want
+            let quads = qap.excludesTriples(d.card);
+            if (!quads || !quads.length)
+                return;
+            let paths = [];
+            for (let i = 0; i < quads.length; i += 3) {
+                let pts = quads.slice(i, i+3).map(x => cardPos[x]);
+                // Find the shortest path between the three
+                let minPathLength = Infinity;
+                let minPath;
+                let comparePathLengths = ([p1, p2, p3]) => {
+                    let d = dist(p1.x, p1.y, p2.x, p2.y) + dist(p2.x, p2.y, p3.x, p3.y);
+                    if (d < minPathLength) {
+                        minPathLength = d;
+                        minPath = [p1, p2, p3];
+                    }
+                }
+                [pts, [pts[1], pts[2], pts[0]], [pts[2], pts[0], pts[1]]]
+                    .forEach(comparePathLengths) 
+                paths.push(minPath);
+            }
+            let pathEls = d3.select("#lines")
+                .classed("hidden", false)
+              .selectAll("path.quad")
+                .data(paths);
+            let dPathEls = pathEls
+                .enter()
+              .append("path")
+                .classed("quad", true);
+            pathEls.exit().remove();
+            pathEls.merge(dPathEls)
+                .attr("d", p => `M ${p[0].x} ${p[0].y} L ${p[1].x} ${p[1].y} L ${p[2].x} ${p[2].y}`);
+
+        })
+        .on('mouseout', function(d) {
+            d3.select("#lines")
+                .classed("hidden", true);
+        })
     dCards.append("use")
         .attr("href", "#diamond")
         .classed("diamond", true);
@@ -201,10 +239,7 @@ function drawAffSpace() {
         .attr("font-size", "25");
     dCards.append("rect");
 	cards.exit()
-		.each(d => {
-			if (qap.contains(d.card))
-	    		qap.remove(d.card);
-		})
+		.each(d => qap.remove(d.card)) 
 		.remove();
 
 	cards = cards.merge(dCards)
@@ -218,28 +253,29 @@ function drawAffSpace() {
         .attr("width", cellSize)
         .attr("height", cellSize);
 	drawQap();
-
 }
-function drawQap(fast) {
+
+function drawQap() {
     d3.selectAll("g.card")
         .classed("in-qap", d => qap.contains(d.card))
-        .classed("excluded", d => qap.excludes(d.card))
+        .classed("excluded", d => qap.excludesCount(d.card))
       .select("text")
         .text(function(d) {
-            return qap.excludes(d.card) || 0;
+            return qap.excludesCount(d.card) || 0;
         });
     d3.select("#cap-size")
         .text(qap.size());
     
     // Exclude counts
-    const n = Object.values(qap.exclude);
-    if (!n.length) 
-        n.push(0);
-    
-    const m = Math.max(...n);
-    let excludes = new Array(m+1).fill(0);
-    for (let i of n)
-        excludes[i]++;
+    // Start with excludes[0] being all elements
+    let excludes = [Math.pow(2, qap.dim)]  
+    for (let i of Object.values(qap.exclude)) {
+        let c = i.length/3;
+        while (excludes.length <= c) 
+            excludes.push(0) 
+        excludes[c] += 1;
+        excludes[0] --;
+    }
     
     const maxExcludeFactor = (d3.select("#exclude-counts")
         .node().getBoundingClientRect().width - 5) *
