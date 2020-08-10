@@ -268,13 +268,21 @@ function drawQap() {
     
     // Exclude counts
     // Start with excludes[0] being all elements
-    let excludes = [Math.pow(2, qap.dim)]  
+    let excludes = [Math.pow(2, qap.dim) - qap.size()]  
     for (let i of Object.values(qap.exclude)) {
         let c = i.length/3;
         while (excludes.length <= c) 
             excludes.push(0) 
         excludes[c] += 1;
         excludes[0] --;
+    }
+    let convolved = [];
+    for (let i = 0; i < excludes.length; i++) {
+        let tot = 0;
+        for (let t = 0; t < excludes.length; t++) {
+            tot += excludes[t] * binomial(t, i);
+        }
+        convolved.push(tot);
     }
     
     const maxExcludeFactor = (d3.select("#exclude-counts")
@@ -296,10 +304,54 @@ function drawQap() {
     eC.exit().remove();
     eC = eC.merge(deC)
     eC.select("span.control-display")
-        .text((d, i) => i ? `${d}` : `${d} (${d-qap.size()})`);
+        .text(d => d);
     
     eC.select('.blue-bar')
         .style('transform', d => `scaleX(${d*maxExcludeFactor})`);
+
+    // convolve distribution
+    let eCV = d3.select("#exclude-convolution")
+        .selectAll(".exclude-count")
+        .data(convolved);
+    let deCV = eCV.enter()
+        .append("div")
+        .classed("exclude-count", true);
+    deCV.append("span")
+        .classed("control-label", true)
+        .text((d, i) => i);
+    deCV.append("span")
+        .classed("control-display", true);
+    eCV.exit().remove();
+    eCV = eCV.merge(deCV);
+    eCV.select("span.control-display")
+        .text(d => d);
+}
+// Binomial Coefficient Computation
+var binomials = [
+    [1],
+    [1,1],
+    [1,2,1],
+    [1,3,3,1],
+    [1,4,6,4,1],
+    [1,5,10,10,5,1],
+    [1,6,15,20,15,6,1]
+];
+
+// step 2: a function that builds out the LUT if it needs to.
+function binomial(n,k) {
+    if (n < k)
+        return 0;
+    while (n >= binomials.length) {
+        let s = binomials.length;
+        let nextRow = [];
+        nextRow[0] = 1;
+        for(let i=1, prev=s-1; i<s; i++) {
+            nextRow[i] = binomials[prev][i-1] + binomials[prev][i];
+        }
+        nextRow[s] = 1;
+        binomials.push(nextRow);
+    }
+    return binomials[n][k];
 }
 if (document.readyState === "complete" ||
    (document.readyState !== "loading" && !document.documentElement.doScroll) ) {
