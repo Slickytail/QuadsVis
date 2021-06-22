@@ -9,7 +9,7 @@ function createListeners() {
 	let dimText = document.getElementById("dim");
 
 	const minDim = 2;
-	const maxDim = 10;
+	const maxDim = 14;
 	function updateDimText() {
 		if (dim <= minDim) {
 			dim = minDim;
