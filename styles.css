@@ -1,10 +1,16 @@
+* {
+    --font-color-soft: #ccc;   
+    --font-color-medium: #ddd;
+    --main-background: #292929;
+    --sidebar-background: #484848;
+}
 body {
 	padding: 0;
 	margin: 0;
 	width: 100vw;
 	height: 100vh;
 	box-sizing: border-box;
-	background-color: #292929;
+	background-color: var(--main-background);
 	user-select: none;
 }
 
@@ -62,9 +68,11 @@ body {
 .hidden_locked {
     display: none;
 }
+
+
 .sidebar {
 	z-index: 1;
-	background-color: #484848;
+	background-color: var(--sidebar-background);
 	align-self: stretch;
 	width: 20vw;
 	min-width: 250px;
@@ -76,13 +84,23 @@ body {
 	box-sizing: border-box;
 	font-family: sans-serif;
 }
+
+.row-with-icons {
+    display: flex;
+    flex-direction: row;
+    align-self: center;
+}
+.row-with-icons :first-child {
+    flex-grow: 1;
+}
+
 .control-group {
 	padding-bottom: 5px;
 	margin-bottom: 5px;
 	border-bottom: 2px solid #595959;
 }
 .control-label {
-	color: #ccc;
+	color: var(--font-color-soft);
 	font-size: 16px;
     
 }
@@ -100,13 +118,13 @@ body {
     justify-content: space-between;
 }
 .control-display {
-	color: #ccc;
+	color: var(--font-color-soft);
 	font-size: 26px;
 	font-weight: bold;
 }
 
 .icon {
-	color: #ccc;
+	color: var(--font-color-soft);
 	font-size: 24px;
 	display: inline-block;
 }
@@ -117,7 +135,7 @@ img.icon {
 .clickable {
 	cursor: pointer;
 	transition: 0.15s opacity;
-	color: #ccc;
+	color: var(--font-color-soft);
 }
 span.clickable:not(.toggle),
 span.clickable.toggle.selected {
@@ -136,7 +154,7 @@ span.clickable.toggle.selected {
     opacity: 100%;
 }
 .sidebar h1 {
-    color: #ddd;
+    color: var(--font-color-medium);
     margin: 0;
     font-size: 24px;
 }
@@ -152,7 +170,7 @@ span.clickable.toggle.selected {
 
 .exclude-count {
     margin-left: 5px;
-    color: #ccc;
+    color: var(--font-color-soft);
     height: 1.4em;
     --bar-color: rgba(41, 176, 255, 0.6);
     display: flex;
@@ -171,4 +189,22 @@ span.clickable.toggle.selected {
     transform-origin: right;
     width: 10px;
     order: 3;
+}
+
+/* Light mode */
+body.light, body.light * {
+    --font-color-soft: #444;   
+    --font-color-medium: #222;
+    --main-background: white;
+    --sidebar-background: white;
+}
+body.light .sidebar {
+    box-shadow: none;
+    border-left: 2px solid #ccc;
+}
+body.light .clickable {
+    text-shadow: none !important;
+}
+body.light img.icon {
+    filter: invert(15%);
 }

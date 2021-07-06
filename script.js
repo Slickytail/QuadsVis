@@ -2,8 +2,17 @@
 var dim = 4;
 // The points currently in the qap
 var qap = new Qap(dim);
+var light = false;
 function createListeners() {
-	// Dimension chooser
+	// Light and Dark Mode
+    let colorToggle = document.getElementById("light-mode");
+    colorToggle.addEventListener("click", () => {
+        light = !light;
+        document.body.classList.toggle("light", light);
+        setTimeout(drawAffSpace);
+    });
+
+    // Dimension chooser
 	let dimDown = document.getElementById("dim-down");
 	let dimUp = document.getElementById("dim-up");
 	let dimText = document.getElementById("dim");
@@ -112,7 +121,9 @@ function drawAffSpace() {
 			ruler[i]++;
 		}
 	}
-	const rulerColors = ["#333", "#444", "#666", "#567", "#46a", "#38d"];
+	const rulerColorsDark  = ["#333", "#444", "#666", "#567", "#46a", "#38d"];
+    const rulerColorsLight = ["#ccc", "#bbb", "#999", "#567", "#46a", "#38d"];
+    let rulerColors = light ? rulerColorsLight : rulerColorsDark;
 	const colorScale = d3.interpolateRgbBasis(rulerColors);
 
 	let lines = new Array();
@@ -353,6 +364,8 @@ function binomial(n,k) {
     }
     return binomials[n][k];
 }
+
+
 if (document.readyState === "complete" ||
    (document.readyState !== "loading" && !document.documentElement.doScroll) ) {
 	createListeners();
