@@ -11,14 +11,22 @@ function createListeners() {
     colorToggle.addEventListener("click", () => {
         light = !light;
         document.body.classList.toggle("light", light);
-        setTimeout(drawAffSpace);
+        setTimeout(drawGridLines);
     });
 
     // PDF saver
     let saveBtn = document.getElementById("save-svg");
     saveBtn.addEventListener("click", () => {
-        let el = document.getElementById("qap");
-        saveSVG(el);
+        // Force light mode, so that the grid lines will be drawn in the appropriate color.
+        let prev_light = light;
+        light = true;
+        drawGridLines();
+
+        saveSVG(document.getElementById("qap"));
+
+        // Set light mode back to whatever it was.
+        light = prev_light;
+        drawGridLines();
     });
 
     // Dimension chooser
@@ -164,12 +172,11 @@ function saveSVG(element) {
 }
 
 var cardPos = [];
+
 function drawAffSpace() {
     let qapSvg = d3.select("#qap");
     // Draw the grid
     // First, we have to compute the size of the grid.
-    // The viewbox is set to 100 x 100. (maybe plus padding)
-    // In the future, we should actually change the viewBox here, depending on the quadStyle and the parity of dim
     const w = 100;
     const h = 100;
 
@@ -184,59 +191,12 @@ function drawAffSpace() {
     // We're going to vertically center the cells.
     let gridHeight = cellSize * yL;
     let gridYMin = (h - gridHeight)/2;
-    let gridYMax = (h + gridHeight)/2;
 
-    qapSvg.attr("viewBox", `-5 ${gridYMin-5} 110 ${gridHeight+10}`);
-    // Draw lines
-    // Generate priority (ruler tickmarks) for lines
-    let ruler = new Array(xL+1).fill(0);
-    for (let w = 0; w < xDim; w++) {
-        let wavelength = Math.pow(2, w);
-        for (let i = 0; i <= xL; i += wavelength) {
-            ruler[i]++;
-        }
-    }
-    const rulerColorsDark  = ["#333", "#444", "#666", "#567", "#46a", "#38d"];
-    const rulerColorsLight = ["#ccc", "#bbb", "#999", "#567", "#46a", "#38d"];
-    let rulerColors = light ? rulerColorsLight : rulerColorsDark;
-    const colorScale = d3.interpolateRgbBasis(rulerColors);
-
-    let lines = new Array();
-    for (let xi = 0; xi <= xL; xi++) {
-        lines.push({
-            vert: true,
-            x: xi,
-            priority: (xi != 0 && xi != xL) ? ruler[xi] : 0.5
-        });
-    }
-    for (let yi = 0; yi <= yL; yi++) {
-        lines.push({
-            vert: false,
-            y: yi,
-            priority: (yi != 0 && yi != yL) ? ruler[yi] : 0.5
-        });
-    }
-
-    lines.sort((a, b) => a.priority - b.priority);
-
-    let grid = qapSvg
-    .select("#grid")
-    .selectAll(".line")
-    .data(lines);
-
-    let enter = grid.enter().append("line")
-    .classed("line", true);
-    grid.exit().remove();
-
-    grid = grid.merge(enter)
-        .attr("x1", d =>  d.vert ? d.x * cellSize : 0)
-        .attr("x2", d =>  d.vert ? d.x * cellSize : 100)
-        .attr("y1", d => !d.vert ? gridYMin + d.y * cellSize : gridYMin)
-        .attr("y2", d => !d.vert ? gridYMin + d.y * cellSize : gridYMax)
-        .attr("stroke-width", d => (d.priority+1)*Math.sqrt(cellSize)/15)
-        .attr("stroke", d => colorScale(d.priority / xDim));
-    d3.select("#lines")
-        .attr("stroke-width", Math.sqrt(cellSize)/3)
+    // Draw the grid
+    // This is the result of a lazy and quick refactor
+    // I wanted to be able to redraw the lines (ie, change their colors!) without redoing everything.
+    // So, there is a small amount of wasted arithmetic with recomputing the above figures.
+    drawGridLines();
 
     // Draw squares for getting clicks
     let squares = new Array();
@@ -262,9 +222,9 @@ function drawAffSpace() {
     }
 
     let cards = qapSvg
-    .select("#points")
-    .selectAll("g.card")
-    .data(squares, d => d.card);
+      .select("#points")
+      .selectAll("g.card")
+      .data(squares, d => d.card);
 
     let dist = (x1, y1, x2, y2) => Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
     let dCards = cards.enter().append("g")
@@ -302,13 +262,13 @@ function drawAffSpace() {
             paths.push(minPath);
         }
         let pathEls = d3.select("#lines")
-        .classed("hidden", false)
-        .selectAll("path.quad")
-        .data(paths);
+          .classed("hidden", false)
+          .selectAll("path.quad")
+          .data(paths);
         let dPathEls = pathEls
-        .enter()
-        .append("path")
-        .classed("quad", true);
+          .enter()
+          .append("path")
+          .classed("quad", true);
         pathEls.exit().remove();
         pathEls.merge(dPathEls)
             .attr("d", p => `M ${p[0].x} ${p[0].y} L ${p[1].x} ${p[1].y} L ${p[2].x} ${p[2].y}`);
@@ -341,6 +301,78 @@ function drawAffSpace() {
     drawQap();
 }
 
+function drawGridLines() {
+    let qapSvg = d3.select("#qap");
+    // First, we have to compute the size of the grid.
+    const w = 100;
+    const h = 100;
+
+    // We'll put the odd dimension on the X-axis. (this should probably depend on viewport orientation.)
+    let xDim = Math.ceil(dim/2);
+    let yDim = Math.floor(dim/2);
+    let xL = Math.pow(2, xDim);
+    let yL = Math.pow(2, yDim);
+    // We want our cells to actually be square. 
+    let cellSize = Math.min(w / xL, h / yDim);
+    // We're going to vertically center the cells.
+    let gridHeight = cellSize * yL;
+    let gridYMin = (h - gridHeight)/2;
+    let gridYMax = (h + gridHeight)/2;
+
+    // Set the viewbox
+    qapSvg.attr("viewBox", `-5 ${gridYMin-5} 110 ${gridHeight+10}`);
+    // Draw lines
+    // Generate priority (ruler tickmarks) for lines
+    let ruler = new Array(xL+1).fill(0);
+    for (let w = 0; w < xDim; w++) {
+        let wavelength = Math.pow(2, w);
+        for (let i = 0; i <= xL; i += wavelength) {
+            ruler[i]++;
+        }
+    }
+    const rulerColorsDark  = ["#333", "#444", "#666", "#567", "#46a", "#38d"];
+    const rulerColorsLight = ["#ccc", "#bbb", "#999", "#567", "#46a", "#38d"];
+    let rulerColors = light ? rulerColorsLight : rulerColorsDark;
+    const colorScale = d3.interpolateRgbBasis(rulerColors);
+
+    let lines = new Array();
+    for (let xi = 0; xi <= xL; xi++) {
+        lines.push({
+            vert: true,
+            x: xi,
+            priority: (xi != 0 && xi != xL) ? ruler[xi] : 0.5
+        });
+    }
+    for (let yi = 0; yi <= yL; yi++) {
+        lines.push({
+            vert: false,
+            y: yi,
+            priority: (yi != 0 && yi != yL) ? ruler[yi] : 0.5
+        });
+    }
+
+    lines.sort((a, b) => a.priority - b.priority);
+
+    let grid = qapSvg
+      .select("#grid")
+      .selectAll(".line")
+      .data(lines);
+
+    let enter = grid.enter().append("line")
+      .classed("line", true);
+    grid.exit().remove();
+
+    grid = grid.merge(enter)
+        .attr("x1", d =>  d.vert ? d.x * cellSize : 0)
+        .attr("x2", d =>  d.vert ? d.x * cellSize : 100)
+        .attr("y1", d => !d.vert ? gridYMin + d.y * cellSize : gridYMin)
+        .attr("y2", d => !d.vert ? gridYMin + d.y * cellSize : gridYMax)
+        .attr("stroke-width", d => (d.priority+1)*Math.sqrt(cellSize)/15)
+        .attr("stroke", d => colorScale(d.priority / xDim));
+    d3.select("#lines")
+        .attr("stroke-width", Math.sqrt(cellSize)/3)
+
+}
 
 function drawQap() {
     d3.selectAll("g.card")
