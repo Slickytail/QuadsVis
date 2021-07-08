@@ -133,12 +133,12 @@ function saveSVG(element) {
             let center = diamond.getAttribute("width");
             diamond.setAttribute("fill", "none");
             diamond.setAttribute("stroke", "#5c9");
-            diamond.setAttribute("stroke-width", `${center/28}`);
+            diamond.setAttribute("stroke-width", `1`);
             // We make up for the added stroke width by reducing the width
-            diamond.setAttribute("width", `${center*0.9}`);
-            diamond.setAttribute("height", `${center*0.9}`);
-            diamond.setAttribute("x", `${center/20}`);
-            diamond.setAttribute("y", `${center/20}`);
+            diamond.setAttribute("width", `${center*0.85}`);
+            diamond.setAttribute("height", `${center*0.85}`);
+            diamond.setAttribute("x", `${center * 0.135}`);
+            diamond.setAttribute("y", `${center * 0.135}`);
             diamond.setAttributeNS(xlink, "xlink:href", "#diamond");
         }
         else if (el.classList.contains("excluded")) {
@@ -296,10 +296,12 @@ function drawAffSpace() {
         .attr("width", cellSize)
         .attr("height", cellSize);
     cards.select("text")
-        .attr("transform", `translate(${cellSize/2}, ${cellSize*0.8}) scale(${cellSize * 0.9/25})`);
+        .attr("transform", `translate(${cellSize/2}, ${cellSize*0.8}) scale(${cellSize * 0.85/25})`);
     cards.select("use")
-        .attr("width", cellSize)
-        .attr("height", cellSize);
+        .attr("width", cellSize*0.9)
+        .attr("height", cellSize*0.9)
+        .attr("x", cellSize*0.058)
+        .attr("y", cellSize*0.058);
     drawQap();
 }
 
