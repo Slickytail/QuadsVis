@@ -127,6 +127,7 @@ function saveSVG(element) {
             el.removeChild(el.getElementsByTagName("rect")[0]);
             el.removeChild(el.getElementsByTagName("text")[0]);
 
+            // Maybe just set the fill and stroke on the original symbol?
             // Set the new diamond style
             let diamond = el.getElementsByClassName("diamond")[0];
             let center = diamond.getAttribute("width");
@@ -147,9 +148,9 @@ function saveSVG(element) {
             // Properly compute the text position
             let text = el.getElementsByTagName("text")[0];
             // Based on the font, determine how to center the text...
-            text.setAttribute("dominant-baseline", "central");
             text.setAttribute("text-anchor", "middle");
             text.setAttribute("fill", "#b55");
+            text.setAttribute("font-family", "Arial");
         }
         else {
             cards.removeChild(el);
@@ -158,12 +159,13 @@ function saveSVG(element) {
 
     let data = copiedSvg.outerHTML;
     let blob = new Blob([data], {type:"image/svg+xml;charset=utf-8"});
+
     let url = URL.createObjectURL(blob);
 
     let link = document.createElement("a");
     link.setAttribute("target","_blank");
     link.href = url;
-    link.download = "saved-cap.svg"
+    link.download = `saved-cap-dim-${dim}.svg`
 
     // Cheap way to click a link.
     document.body.appendChild(link);
@@ -294,7 +296,7 @@ function drawAffSpace() {
         .attr("width", cellSize)
         .attr("height", cellSize);
     cards.select("text")
-        .attr("transform", `translate(${cellSize/2}, ${cellSize/2}) scale(${cellSize * 0.9/25})`);
+        .attr("transform", `translate(${cellSize/2}, ${cellSize*0.8}) scale(${cellSize * 0.9/25})`);
     cards.select("use")
         .attr("width", cellSize)
         .attr("height", cellSize);
