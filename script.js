@@ -4,6 +4,11 @@ var dim = 4;
 var qap = new Qap(dim);
 var light = false;
 
+function loadQap(t) {
+    qap.clear();
+    t.forEach(p => qap.add(p));
+    requestAnimationFrame(drawQap);
+}
 
 function createListeners() {
     // Light and Dark Mode
