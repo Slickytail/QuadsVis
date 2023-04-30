@@ -1,26 +1,28 @@
 <!doctype html>
 <html>
+
 <head>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  	<title>Qap Visualizer</title>
-  	<link rel="stylesheet" href="styles.css" type="text/css">
-  	<script defer src="https://d3js.org/d3.v5.min.js"></script>
-  	<script src="qap.js" type="text/javascript"></script>
-	<script src="script.js" type="text/javascript"></script>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Qap Visualizer</title>
+    <link rel="stylesheet" href="styles.css" type="text/css">
+    <script defer src="https://d3js.org/d3.v5.min.js"></script>
+    <script src="qap.js" type="text/javascript"></script>
+    <script src="script.js" type="text/javascript"></script>
 </head>
+
 <body>
-	<div class="container">
-		<div class="affine">
-			<svg id="qap" viewBox="-5 -5 110 110" xmlns="http://www.w3.org/2000/svg">
+    <div class="container">
+        <div class="affine">
+            <svg id="qap" viewBox="-5 -5 110 110" xmlns="http://www.w3.org/2000/svg">
                 <symbol id="diamond" viewBox="0 0 10 10">
                     <polygon points="5,1 1,5 5,9 9,5">
                 </symbol>
-				<g id="points"></g>
-				<g id="grid"></g>
+                <g id="points"></g>
+                <g id="grid"></g>
                 <g id="lines"></g>
-			</svg>
-		</div>
-		<div class="sidebar">
+            </svg>
+        </div>
+        <div class="sidebar">
             <div class="controls">
                 <div class="row-with-icons">
                     <h1>Controls</h1>
@@ -48,16 +50,18 @@
                         <span id="clear" class="control-label clickable">Clear</span>
                         <span id="complete" class="control-label clickable">Complete</span>
                         <span id="random" class="control-label clickable">Random</span>
+                        <span id="translate" class="control-label clickable">Translate</span>
                     </div>
                 </div>
-                
-			</div>
-			<div class="stats">
+
+            </div>
+            <div class="stats">
                 <h1>Statistics</h1>
                 <div class="control-group">
                     <div class="control-box no-label">
                         <span class="control-label">Size: <span id="cap-size" class="control-display">10</span></span>
-                        
+                        <span class="control-label">Translated By: <span id="cap-translate"
+                                class="control-display">(0,0)</span></span>
                     </div>
                 </div>
                 <div class="control-group" id="exclude-counts">
@@ -67,7 +71,8 @@
                     <span class="control-label">Convolved Distribution</span>
                 </div>
             </div>
-		</div>
-	</div>
+        </div>
+    </div>
 </body>
+
 </html>
