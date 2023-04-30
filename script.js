@@ -59,8 +59,8 @@ function createListeners() {
         qap.changeDim(dim);
         setTimeout(drawAffSpace);
     }
-    dimDown.onclick = () => {dim--; updateDimText()};
-    dimUp.onclick = () => {dim++; updateDimText()};
+    dimDown.onclick = () => { dim--; updateDimText() };
+    dimUp.onclick = () => { dim++; updateDimText() };
     updateDimText();
 
     // Dimension display
@@ -95,7 +95,7 @@ function createListeners() {
     const r = document.getElementById("random");
     r.onclick = () => {
         if (r.classList.contains("disabled"))
-        return;
+            return;
         r.classList.add("disabled");
         qap.clear();
         function _done() {
@@ -108,12 +108,18 @@ function createListeners() {
         qap.random(_f, _done);
     }
 
+    // Qap translate
+    document.getElementById("translate").onclick = () => {
+        qap.translate();
+        window.requestAnimationFrame(drawQap);
+    }
+
     window.requestAnimationFrame(drawAffSpace);
 }
 
 // Preprocesses the SVG display to make it standalone.
 function saveSVG(element) {
-    
+
     const xmlns = "http://www.w3.org/2000/svg";
     const xlink = "http://www.w3.org/1999/xlink";
 
@@ -140,8 +146,8 @@ function saveSVG(element) {
             diamond.setAttribute("stroke", "#5c9");
             diamond.setAttribute("stroke-width", `1`);
             // We make up for the added stroke width by reducing the width
-            diamond.setAttribute("width", `${center*0.85}`);
-            diamond.setAttribute("height", `${center*0.85}`);
+            diamond.setAttribute("width", `${center * 0.85}`);
+            diamond.setAttribute("height", `${center * 0.85}`);
             diamond.setAttribute("x", `${center * 0.135}`);
             diamond.setAttribute("y", `${center * 0.135}`);
             diamond.setAttributeNS(xlink, "xlink:href", "#diamond");
@@ -163,12 +169,12 @@ function saveSVG(element) {
     });
 
     let data = copiedSvg.outerHTML;
-    let blob = new Blob([data], {type:"image/svg+xml;charset=utf-8"});
+    let blob = new Blob([data], { type: "image/svg+xml;charset=utf-8" });
 
     let url = URL.createObjectURL(blob);
 
     let link = document.createElement("a");
-    link.setAttribute("target","_blank");
+    link.setAttribute("target", "_blank");
     link.href = url;
     link.download = `saved-cap-dim-${dim}.svg`
 
@@ -189,15 +195,15 @@ function drawAffSpace() {
 
     // We'll put the odd dimension on the X-axis. (this should probably depend on viewport orientation.)
     // First, we'll figure out the cardsBtn-style layout (ie, quadStyle == false)
-    let xDim = Math.ceil(dim/2);
-    let yDim = Math.floor(dim/2);
+    let xDim = Math.ceil(dim / 2);
+    let yDim = Math.floor(dim / 2);
     let xL = Math.pow(2, xDim);
     let yL = Math.pow(2, yDim);
     // We want our cells to actually be square. 
     let cellSize = Math.min(w / xL, h / yDim);
     // We're going to vertically center the cells.
     let gridHeight = cellSize * yL;
-    let gridYMin = (h - gridHeight)/2;
+    let gridYMin = (h - gridHeight) / 2;
 
     // Draw the grid
     // This is the result of a lazy and quick refactor
@@ -217,74 +223,74 @@ function drawAffSpace() {
                 let bx = (xi & (1 << i)) >>> i;
                 let by = (yi & (1 << i)) >>> i;
                 // Now we need to set the 2ith bit of cardnum to bx and the (2i+1)th to by
-                cardNum = cardNum | (bx << (2*i)) | (by << (2*i + 1));
+                cardNum = cardNum | (bx << (2 * i)) | (by << (2 * i + 1));
             }
             squares.push({
                 xi: xi,
                 yi: yi,
                 card: cardNum
             })
-            cardPos[cardNum] = {x: (xi+0.5)*cellSize, y: gridYMin + (yi+0.5)*cellSize};
+            cardPos[cardNum] = { x: (xi + 0.5) * cellSize, y: gridYMin + (yi + 0.5) * cellSize };
         }
     }
 
     let cards = qapSvg
-      .select("#points")
-      .selectAll("g.card")
-      .data(squares, d => d.card);
+        .select("#points")
+        .selectAll("g.card")
+        .data(squares, d => d.card);
 
     let dist = (x1, y1, x2, y2) => Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
     let dCards = cards.enter().append("g")
-    .classed("card", true)
-    .on('click', function(d) {
-        if (qap.excludesCount(d.card)) {
-            return;
-        }
-        if (qap.contains(d.card))
-        qap.remove(d.card);
-        else
-        qap.add(d.card);
-        window.requestAnimationFrame(drawQap);
-    })
-    .on('mouseover', function(d) {
-        // Compute which lines we want
-        let quads = qap.excludesTriples(d.card);
-        if (!quads || !quads.length)
-        return;
-        let paths = [];
-        for (let i = 0; i < quads.length; i += 3) {
-            let pts = quads.slice(i, i+3).map(x => cardPos[x]);
-            // Find the shortest path between the three
-            let minPathLength = Infinity;
-            let minPath;
-            let comparePathLengths = ([p1, p2, p3]) => {
-                let d = dist(p1.x, p1.y, p2.x, p2.y) + dist(p2.x, p2.y, p3.x, p3.y);
-                if (d < minPathLength) {
-                    minPathLength = d;
-                    minPath = [p1, p2, p3];
-                }
+        .classed("card", true)
+        .on('click', function (d) {
+            if (qap.excludesCount(d.card)) {
+                return;
             }
-            [pts, [pts[1], pts[2], pts[0]], [pts[2], pts[0], pts[1]]]
-            .forEach(comparePathLengths) 
-            paths.push(minPath);
-        }
-        let pathEls = d3.select("#lines")
-          .classed("hidden", false)
-          .selectAll("path.quad")
-          .data(paths);
-        let dPathEls = pathEls
-          .enter()
-          .append("path")
-          .classed("quad", true);
-        pathEls.exit().remove();
-        pathEls.merge(dPathEls)
-            .attr("d", p => `M ${p[0].x} ${p[0].y} L ${p[1].x} ${p[1].y} L ${p[2].x} ${p[2].y}`);
+            if (qap.contains(d.card))
+                qap.remove(d.card);
+            else
+                qap.add(d.card);
+            window.requestAnimationFrame(drawQap);
+        })
+        .on('mouseover', function (d) {
+            // Compute which lines we want
+            let quads = qap.excludesTriples(d.card);
+            if (!quads || !quads.length)
+                return;
+            let paths = [];
+            for (let i = 0; i < quads.length; i += 3) {
+                let pts = quads.slice(i, i + 3).map(x => cardPos[x]);
+                // Find the shortest path between the three
+                let minPathLength = Infinity;
+                let minPath;
+                let comparePathLengths = ([p1, p2, p3]) => {
+                    let d = dist(p1.x, p1.y, p2.x, p2.y) + dist(p2.x, p2.y, p3.x, p3.y);
+                    if (d < minPathLength) {
+                        minPathLength = d;
+                        minPath = [p1, p2, p3];
+                    }
+                }
+                [pts, [pts[1], pts[2], pts[0]], [pts[2], pts[0], pts[1]]]
+                    .forEach(comparePathLengths)
+                paths.push(minPath);
+            }
+            let pathEls = d3.select("#lines")
+                .classed("hidden", false)
+                .selectAll("path.quad")
+                .data(paths);
+            let dPathEls = pathEls
+                .enter()
+                .append("path")
+                .classed("quad", true);
+            pathEls.exit().remove();
+            pathEls.merge(dPathEls)
+                .attr("d", p => `M ${p[0].x} ${p[0].y} L ${p[1].x} ${p[1].y} L ${p[2].x} ${p[2].y}`);
 
-    })
-    .on('mouseout', function(d) {
-        d3.select("#lines")
-            .classed("hidden", true);
-    })
+        })
+        .on('mouseout', function (d) {
+            d3.select("#lines")
+                .classed("hidden", true);
+        })
     dCards.append("use")
         .attr("href", "#diamond")
         .classed("diamond", true);
@@ -292,7 +298,7 @@ function drawAffSpace() {
         .attr("font-size", "25");
     dCards.append("rect");
     cards.exit()
-        .each(d => qap.remove(d.card)) 
+        .each(d => qap.remove(d.card))
         .remove();
 
     cards = cards.merge(dCards)
@@ -301,12 +307,12 @@ function drawAffSpace() {
         .attr("width", cellSize)
         .attr("height", cellSize);
     cards.select("text")
-        .attr("transform", `translate(${cellSize/2}, ${cellSize*0.8}) scale(${cellSize * 0.85/25})`);
+        .attr("transform", `translate(${cellSize / 2}, ${cellSize * 0.8}) scale(${cellSize * 0.85 / 25})`);
     cards.select("use")
-        .attr("width", cellSize*0.9)
-        .attr("height", cellSize*0.9)
-        .attr("x", cellSize*0.058)
-        .attr("y", cellSize*0.058);
+        .attr("width", cellSize * 0.9)
+        .attr("height", cellSize * 0.9)
+        .attr("x", cellSize * 0.058)
+        .attr("y", cellSize * 0.058);
     drawQap();
 }
 
@@ -317,29 +323,29 @@ function drawGridLines() {
     const h = 100;
 
     // We'll put the odd dimension on the X-axis. (this should probably depend on viewport orientation.)
-    let xDim = Math.ceil(dim/2);
-    let yDim = Math.floor(dim/2);
+    let xDim = Math.ceil(dim / 2);
+    let yDim = Math.floor(dim / 2);
     let xL = Math.pow(2, xDim);
     let yL = Math.pow(2, yDim);
     // We want our cells to actually be square. 
     let cellSize = Math.min(w / xL, h / yDim);
     // We're going to vertically center the cells.
     let gridHeight = cellSize * yL;
-    let gridYMin = (h - gridHeight)/2;
-    let gridYMax = (h + gridHeight)/2;
+    let gridYMin = (h - gridHeight) / 2;
+    let gridYMax = (h + gridHeight) / 2;
 
     // Set the viewbox
-    qapSvg.attr("viewBox", `-5 ${gridYMin-5} 110 ${gridHeight+10}`);
+    qapSvg.attr("viewBox", `-5 ${gridYMin - 5} 110 ${gridHeight + 10}`);
     // Draw lines
     // Generate priority (ruler tickmarks) for lines
-    let ruler = new Array(xL+1).fill(0);
+    let ruler = new Array(xL + 1).fill(0);
     for (let w = 0; w < xDim; w++) {
         let wavelength = Math.pow(2, w);
         for (let i = 0; i <= xL; i += wavelength) {
             ruler[i]++;
         }
     }
-    const rulerColorsDark  = ["#333", "#444", "#666", "#567", "#46a", "#38d"];
+    const rulerColorsDark = ["#333", "#444", "#666", "#567", "#46a", "#38d"];
     const rulerColorsLight = ["#ccc", "#bbb", "#999", "#567", "#46a", "#38d"];
     let rulerColors = light ? rulerColorsLight : rulerColorsDark;
     const colorScale = d3.interpolateRgbBasis(rulerColors);
@@ -363,23 +369,23 @@ function drawGridLines() {
     lines.sort((a, b) => a.priority - b.priority);
 
     let grid = qapSvg
-      .select("#grid")
-      .selectAll(".line")
-      .data(lines);
+        .select("#grid")
+        .selectAll(".line")
+        .data(lines);
 
     let enter = grid.enter().append("line")
-      .classed("line", true);
+        .classed("line", true);
     grid.exit().remove();
 
     grid = grid.merge(enter)
-        .attr("x1", d =>  d.vert ? d.x * cellSize : 0)
-        .attr("x2", d =>  d.vert ? d.x * cellSize : 100)
+        .attr("x1", d => d.vert ? d.x * cellSize : 0)
+        .attr("x2", d => d.vert ? d.x * cellSize : 100)
         .attr("y1", d => !d.vert ? gridYMin + d.y * cellSize : gridYMin)
         .attr("y2", d => !d.vert ? gridYMin + d.y * cellSize : gridYMax)
-        .attr("stroke-width", d => (d.priority+1)*Math.sqrt(cellSize)/15)
+        .attr("stroke-width", d => (d.priority + 1) * Math.sqrt(cellSize) / 15)
         .attr("stroke", d => colorScale(d.priority / xDim));
     d3.select("#lines")
-        .attr("stroke-width", Math.sqrt(cellSize)/3)
+        .attr("stroke-width", Math.sqrt(cellSize) / 3)
 
 }
 
@@ -388,21 +394,23 @@ function drawQap() {
         .classed("in-qap", d => qap.contains(d.card))
         .classed("excluded", d => qap.excludesCount(d.card))
         .select("text")
-        .text(function(d) {
+        .text(function (d) {
             return qap.excludesCount(d.card) || 0;
         });
     d3.select("#cap-size")
         .text(qap.size());
+    d3.select("#cap-translate")
+        .text(qap.translatedBy());
 
     // Exclude counts
     // Start with excludes[0] being all elements
-    let excludes = [Math.pow(2, qap.dim) - qap.size()]  
+    let excludes = [Math.pow(2, qap.dim) - qap.size()]
     for (let i of Object.values(qap.exclude)) {
-        let c = i.length/3;
-        while (excludes.length <= c) 
-        excludes.push(0) 
+        let c = i.length / 3;
+        while (excludes.length <= c)
+            excludes.push(0)
         excludes[c] += 1;
-        excludes[0] --;
+        excludes[0]--;
     }
     let convolved = [];
     for (let i = 0; i < excludes.length; i++) {
@@ -417,11 +425,11 @@ function drawQap() {
         .node().getBoundingClientRect().width - 5) *
         0.8 / 10 / Math.max(...excludes);
     let eC = d3.select("#exclude-counts")
-    .selectAll(".exclude-count")
-    .data(excludes);
+        .selectAll(".exclude-count")
+        .data(excludes);
     let deC = eC.enter()
-    .append("div")
-    .classed("exclude-count", true);
+        .append("div")
+        .classed("exclude-count", true);
     deC.append('span')
         .classed('blue-bar', true);
     deC.append("span")
@@ -435,15 +443,15 @@ function drawQap() {
         .text(d => d);
 
     eC.select('.blue-bar')
-        .style('transform', d => `scaleX(${d*maxExcludeFactor})`);
+        .style('transform', d => `scaleX(${d * maxExcludeFactor})`);
 
     // convolve distribution
     let eCV = d3.select("#exclude-convolution")
-    .selectAll(".exclude-count")
-    .data(convolved);
+        .selectAll(".exclude-count")
+        .data(convolved);
     let deCV = eCV.enter()
-    .append("div")
-    .classed("exclude-count", true);
+        .append("div")
+        .classed("exclude-count", true);
     deCV.append("span")
         .classed("control-label", true)
         .text((d, i) => i);
@@ -458,24 +466,24 @@ function drawQap() {
 // Binomial Coefficient Computation
 var binomials = [
     [1],
-    [1,1],
-    [1,2,1],
-    [1,3,3,1],
-    [1,4,6,4,1],
-    [1,5,10,10,5,1],
-    [1,6,15,20,15,6,1]
+    [1, 1],
+    [1, 2, 1],
+    [1, 3, 3, 1],
+    [1, 4, 6, 4, 1],
+    [1, 5, 10, 10, 5, 1],
+    [1, 6, 15, 20, 15, 6, 1]
 ];
 
 // step 2: a function that builds out the LUT if it needs to.
-function binomial(n,k) {
+function binomial(n, k) {
     if (n < k)
-    return 0;
+        return 0;
     while (n >= binomials.length) {
         let s = binomials.length;
         let nextRow = [];
         nextRow[0] = 1;
-        for(let i=1, prev=s-1; i<s; i++) {
-            nextRow[i] = binomials[prev][i-1] + binomials[prev][i];
+        for (let i = 1, prev = s - 1; i < s; i++) {
+            nextRow[i] = binomials[prev][i - 1] + binomials[prev][i];
         }
         nextRow[s] = 1;
         binomials.push(nextRow);
@@ -485,7 +493,7 @@ function binomial(n,k) {
 
 // Call createListeners at the right time
 if (document.readyState === "complete" ||
-    (document.readyState !== "loading" && !document.documentElement.doScroll) ) {
+    (document.readyState !== "loading" && !document.documentElement.doScroll)) {
     createListeners();
 } else {
     document.addEventListener("DOMContentLoaded", createListeners);
